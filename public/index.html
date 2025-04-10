@@ -1,0 +1,1042 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>MCP Agent - Multi-Component Prompting</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* Primary colors */
+            --primary-50: #eef2ff;
+            --primary-100: #e0e7ff;
+            --primary-200: #c7d2fe;
+            --primary-300: #a5b4fc;
+            --primary-400: #818cf8;
+            --primary-500: #6366f1;
+            --primary-600: #4f46e5;
+            --primary-700: #4338ca;
+            --primary-800: #3730a3;
+            --primary-900: #312e81;
+            
+            /* Secondary colors */
+            --secondary-50: #ecfdf5;
+            --secondary-100: #d1fae5;
+            --secondary-200: #a7f3d0;
+            --secondary-300: #6ee7b7;
+            --secondary-400: #34d399;
+            --secondary-500: #10b981;
+            --secondary-600: #059669;
+            --secondary-700: #047857;
+            --secondary-800: #065f46;
+            --secondary-900: #064e3b;
+            
+            /* Neutral colors */
+            --neutral-50: #f8fafc;
+            --neutral-100: #f1f5f9;
+            --neutral-200: #e2e8f0;
+            --neutral-300: #cbd5e1;
+            --neutral-400: #94a3b8;
+            --neutral-500: #64748b;
+            --neutral-600: #475569;
+            --neutral-700: #334155;
+            --neutral-800: #1e293b;
+            --neutral-900: #0f172a;
+            
+            /* Danger colors */
+            --danger-50: #fef2f2;
+            --danger-100: #fee2e2;
+            --danger-500: #ef4444;
+            --danger-600: #dc2626;
+            
+            /* UI Variables */
+            --space-xs: 0.25rem;
+            --space-sm: 0.5rem;
+            --space-md: 1rem;
+            --space-lg: 1.5rem;
+            --space-xl: 2rem;
+            --space-2xl: 3rem;
+            
+            --border-radius-sm: 0.25rem;
+            --border-radius: 0.5rem;
+            --border-radius-lg: 0.75rem;
+            --border-radius-xl: 1rem;
+            
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-md: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            
+            --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+            --transition: 300ms cubic-bezier(0.4, 0, 0.2, 1);
+            --transition-slow: 500ms cubic-bezier(0.4, 0, 0.2, 1);
+            
+            --font-mono: 'JetBrains Mono', monospace;
+            --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            
+            /* Theme variables */
+            --bg-color: linear-gradient(135deg, #f5f7fa 0%, #e4e9f2 100%);
+            --container-bg: white;
+            --text-color: var(--neutral-800);
+            --text-muted: var(--neutral-500);
+            --border-color: var(--neutral-200);
+        }
+        
+        /* Dark mode variables */
+        [data-theme="dark"] {
+            --bg-color: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            --container-bg: #1e293b;
+            --text-color: #f1f5f9;
+            --text-muted: #94a3b8;
+            --border-color: #334155;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: var(--font-sans);
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: var(--space-xl);
+            line-height: 1.6;
+            color: var(--text-color);
+            background: var(--bg-color);
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            min-height: 100vh;
+        }
+        
+        h1, h2, h3, h4, h5, h6 {
+            line-height: 1.2;
+            letter-spacing: -0.025em;
+        }
+        
+        h1 {
+            color: var(--primary-700);
+            margin-bottom: var(--space-xs);
+            font-weight: 700;
+            font-size: 2.5rem;
+        }
+        
+        h3 {
+            color: var(--neutral-800);
+            margin: var(--space-lg) 0 var(--space-md);
+            font-weight: 600;
+            font-size: 1.25rem;
+        }
+        
+        p {
+            color: var(--text-muted);
+            margin-bottom: var(--space-xl);
+            font-size: 1.125rem;
+            max-width: 65ch;
+        }
+        
+        .container {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-lg);
+            background-color: var(--container-bg);
+            padding: var(--space-xl);
+            border-radius: var(--border-radius-lg);
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--border-color);
+            backdrop-filter: blur(10px);
+            position: relative;
+            z-index: 1;
+        }
+        
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-sm);
+        }
+        
+        label {
+            font-weight: 600;
+            color: var(--neutral-700);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        
+        select, textarea, button {
+            padding: var(--space-md);
+            border-radius: var(--border-radius);
+            border: 1.5px solid var(--neutral-300);
+            font-family: var(--font-sans);
+            font-size: 1rem;
+            transition: var(--transition-fast);
+        }
+        
+        select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--primary-500);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+        }
+        
+        select {
+            cursor: pointer;
+            background-color: white;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 1rem center;
+            background-size: 1rem;
+            padding-right: 2.5rem;
+            font-weight: 500;
+        }
+        
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+            line-height: 1.5;
+        }
+        
+        button {
+            background-color: var(--primary-600);
+            color: white;
+            border: none;
+            cursor: pointer;
+            padding: var(--space-md) var(--space-lg);
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: var(--transition);
+            margin-top: var(--space-sm);
+            box-shadow: var(--shadow-sm);
+            align-self: flex-start;
+            border-radius: var(--border-radius);
+        }
+        
+        button:hover {
+            background-color: var(--primary-700);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow);
+        }
+        
+        button:active {
+            transform: translateY(0);
+            background-color: var(--primary-800);
+        }
+        
+        button:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.4);
+        }
+        
+        #response {
+            background-color: var(--neutral-50);
+            padding: var(--space-lg);
+            border-radius: var(--border-radius);
+            border-left: 4px solid var(--secondary-500);
+            white-space: pre-wrap;
+            overflow-x: auto;
+            font-family: var(--font-mono);
+            font-size: 0.9rem;
+            line-height: 1.5;
+            box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.06);
+            color: var(--neutral-800);
+        }
+        
+        .loading {
+            display: none;
+            margin-top: var(--space-md);
+            color: var(--neutral-500);
+            font-weight: 500;
+            align-items: center;
+        }
+        
+        .loading::before {
+            content: "";
+            display: inline-block;
+            width: 1rem;
+            height: 1rem;
+            margin-right: var(--space-sm);
+            border: 2px solid var(--neutral-200);
+            border-top-color: var(--primary-500);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .error {
+            color: var(--danger-600);
+            background-color: var(--danger-50);
+            padding: var(--space-md);
+            border-radius: var(--border-radius);
+            display: none;
+            font-weight: 500;
+            margin-bottom: var(--space-lg);
+            border-left: 4px solid var(--danger-500);
+        }
+        
+        .error-details {
+            font-size: 0.875rem;
+            margin-top: var(--space-sm);
+        }
+        
+        .error-actions {
+            margin-top: var(--space-md);
+            display: flex;
+            gap: var(--space-md);
+        }
+        
+        .error-action-btn {
+            background-color: var(--neutral-100);
+            color: var(--neutral-800);
+            border: 1px solid var(--neutral-300);
+            padding: var(--space-sm) var(--space-md);
+            border-radius: var(--border-radius-sm);
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: var(--transition-fast);
+        }
+        
+        .error-action-btn:hover {
+            background-color: var(--neutral-200);
+        }
+        
+        .history-container {
+            background-color: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-sm);
+            margin-top: var(--space-md);
+            overflow: hidden;
+            border: 1px solid var(--neutral-200);
+        }
+        
+        .history-item {
+            padding: var(--space-md);
+            border-bottom: 1px solid var(--neutral-200);
+            cursor: pointer;
+            transition: var(--transition-fast);
+            display: flex;
+            align-items: center;
+        }
+        
+        .history-item:last-child {
+            border-bottom: none;
+        }
+        
+        .history-item:hover {
+            background-color: var(--primary-50);
+        }
+        
+        .history-item::before {
+            content: "";
+            display: inline-block;
+            width: 0.5rem;
+            height: 0.5rem;
+            background-color: var(--primary-500);
+            border-radius: 50%;
+            margin-right: var(--space-sm);
+            flex-shrink: 0;
+        }
+        
+        .response-container {
+            margin-top: var(--space-lg);
+        }
+        
+        .history-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: var(--space-sm);
+        }
+        
+        .history-header h3 {
+            margin: 0;
+        }
+        
+        .clear-history {
+            background: none;
+            border: none;
+            color: var(--neutral-500);
+            cursor: pointer;
+            font-size: 0.875rem;
+            padding: var(--space-xs) var(--space-sm);
+            transition: var(--transition-fast);
+            border-radius: var(--border-radius-sm);
+            margin-top: 0;
+            font-weight: 500;
+        }
+        
+        .clear-history:hover {
+            color: var(--danger-600);
+            background-color: var(--danger-50);
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .section {
+            margin-bottom: var(--space-xl);
+            background-color: white;
+            border-radius: var(--border-radius-lg);
+            box-shadow: var(--shadow-sm);
+            padding: var(--space-lg);
+            border: 1px solid var(--neutral-200);
+        }
+        
+        .header {
+            margin-bottom: var(--space-xl);
+            border-bottom: 1px solid var(--neutral-200);
+            padding-bottom: var(--space-lg);
+            text-align: center;
+        }
+        
+        .timestamp {
+            color: var(--neutral-400);
+            font-size: 0.75rem;
+            margin-left: var(--space-sm);
+            font-weight: 500;
+        }
+        
+        .task-type-badge {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: var(--border-radius-sm);
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-right: var(--space-sm);
+            background-color: var(--primary-100);
+            color: var(--primary-800);
+        }
+        
+        /* Responsive design */
+        @media (max-width: 768px) {
+            body {
+                padding: var(--space-md);
+            }
+            
+            .container {
+                padding: var(--space-lg);
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            button {
+                width: 100%;
+            }
+        }
+        
+        /* Dark mode toggle */
+        .theme-toggle {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            margin-bottom: var(--space-md);
+        }
+        
+        #theme-toggle-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: var(--space-xs) var(--space-sm);
+            transition: var(--transition-fast);
+            border-radius: var(--border-radius-sm);
+            margin-top: 0;
+            font-weight: 500;
+        }
+        
+        #theme-toggle-btn svg {
+            width: 24px;
+            height: 24px;
+        }
+        
+        /* Copy response button */
+        .copy-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: var(--space-xs) var(--space-sm);
+            transition: var(--transition-fast);
+            border-radius: var(--border-radius-sm);
+            margin-top: 0;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+        }
+        
+        .copy-btn svg {
+            width: 18px;
+            height: 18px;
+            margin-right: var(--space-sm);
+        }
+        
+        .copy-btn span {
+            font-size: 0.875rem;
+        }
+        
+        /* Setup LLM Button and Modal */
+        .setup-llm {
+            margin-top: var(--space-lg);
+            text-align: center;
+        }
+        
+        .setup-llm-btn {
+            display: inline-block;
+            padding: var(--space-sm) var(--space-md);
+            background-color: var(--primary-600);
+            color: white;
+            border-radius: var(--border-radius);
+            text-decoration: none;
+            font-weight: 500;
+            transition: var(--transition-fast);
+        }
+        
+        .setup-llm-btn:hover {
+            background-color: var(--primary-700);
+        }
+        
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        
+        .modal-content {
+            background-color: var(--container-bg);
+            padding: var(--space-xl);
+            border-radius: var(--border-radius-lg);
+            max-width: 800px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+            box-shadow: var(--shadow-lg);
+        }
+        
+        .close-modal {
+            position: absolute;
+            top: var(--space-md);
+            right: var(--space-md);
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+        
+        .setup-steps {
+            text-align: left;
+        }
+        
+        .setup-steps h3 {
+            margin-top: var(--space-lg);
+            margin-bottom: var(--space-sm);
+        }
+        
+        .setup-steps pre {
+            background-color: var(--neutral-800);
+            color: var(--neutral-100);
+            padding: var(--space-md);
+            border-radius: var(--border-radius);
+            overflow-x: auto;
+            margin: var(--space-md) 0;
+        }
+        
+        .setup-steps ul {
+            margin-left: var(--space-lg);
+            margin-bottom: var(--space-md);
+        }
+        
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="header">
+        <h1>MCP Agent</h1>
+        <p>Multi-Component Prompting</p>
+        <div class="theme-toggle">
+            <button id="theme-toggle-btn" aria-label="Toggle dark mode">
+                <svg id="light-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="5"></circle>
+                    <line x1="12" y1="1" x2="12" y2="3"></line>
+                    <line x1="12" y1="21" x2="12" y2="23"></line>
+                    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                    <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                    <line x1="1" y1="12" x2="3" y2="12"></line>
+                    <line x1="21" y1="12" x2="23" y2="12"></line>
+                    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                    <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                </svg>
+                <svg id="dark-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
+                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                </svg>
+            </button>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="form-container">
+            <form id="promptForm">
+                <div class="form-group">
+                    <label for="taskType">Task Type</label>
+                    <select id="taskType" name="taskType">
+                        <option value="write">Write Code</option>
+                        <option value="debug">Debug Code</option>
+                        <option value="explain">Explain Code</option>
+                        <option value="refactor">Refactor Code</option>
+                        <option value="test">Write Tests</option>
+                        <option value="convert">Convert Code</option>
+                        <option value="default">Custom Instruction</option>
+                    </select>
+                </div>
+                
+                <div id="codeSnippetContainer" class="form-group">
+                    <label for="codeSnippet">Code Snippet</label>
+                    <textarea id="codeSnippet" name="codeSnippet" rows="10" placeholder="Enter your code here..."></textarea>
+                </div>
+                
+                <div id="instructionContainer" class="form-group">
+                    <label for="instruction">Instruction</label>
+                    <textarea id="instruction" name="instruction" rows="3" placeholder="Enter your instruction here..."></textarea>
+                </div>
+                
+                <button type="submit" id="submitBtn">Ask Agent</button>
+            </form>
+        </div>
+        
+        <div class="loading" id="loadingIndicator">Processing your request...</div>
+        <div class="error" id="errorMessage"></div>
+        
+        <div class="response-container">
+            <div class="response-header">
+                <h3>Response</h3>
+                <button id="copy-response" class="copy-btn" aria-label="Copy response">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                    </svg>
+                    <span>Copy</span>
+                </button>
+            </div>
+            <pre id="response">Results will appear here...</pre>
+        </div>
+    </div>
+    
+    <div class="setup-llm">
+        <a href="#" id="setupLLMBtn" class="setup-llm-btn">Use Your Local LLM</a>
+        <div id="setupLLMModal" class="modal hidden">
+            <div class="modal-content">
+                <span class="close-modal">&times;</span>
+                <h2>Setting Up Your Local LLM with Ollama</h2>
+                <div class="setup-steps">
+                    <h3>Step 1: Install Ollama</h3>
+                    <p>Download and install Ollama from <a href="https://ollama.ai" target="_blank">https://ollama.ai</a></p>
+                    
+                    <h3>Step 2: Pull a Model</h3>
+                    <p>Open a terminal or command prompt and run:</p>
+                    <pre>ollama pull deepseek-r1:14b</pre>
+                    <p>You can also try other models like:</p>
+                    <ul>
+                        <li>llama3</li>
+                        <li>mistral</li>
+                        <li>codellama</li>
+                    </ul>
+                    
+                    <h3>Step 3: Run the Model</h3>
+                    <p>Start the model with:</p>
+                    <pre>ollama run deepseek-r1:14b</pre>
+                    
+                    <h3>Step 4: Connect MCP</h3>
+                    <p>Ensure the MCP server is running and it will automatically connect to your local Ollama instance.</p>
+                    
+                    <h3>Troubleshooting</h3>
+                    <p>If you encounter issues:</p>
+                    <ul>
+                        <li>Make sure Ollama is running on port 11434</li>
+                        <li>Check that your model is properly downloaded</li>
+                        <li>For slower computers, try a smaller model like mistral:7b</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="section">
+        <div class="history-header">
+            <h3>Prompt History</h3>
+            <button class="clear-history" onclick="clearHistory()">Clear All</button>
+        </div>
+        <div class="history-container">
+            <div id="promptHistory"></div>
+        </div>
+    </div>
+
+    <script>
+        // Show/hide code snippet based on task type
+        document.getElementById('taskType').addEventListener('change', function() {
+            const taskType = this.value;
+            const codeSnippetContainer = document.getElementById('codeSnippetContainer');
+            
+            // Show/hide code snippet based on task type
+            if (taskType === 'write' || taskType === 'default') {
+                codeSnippetContainer.style.display = 'none';
+            } else {
+                codeSnippetContainer.style.display = 'block';
+            }
+            
+            // Update placeholders based on task type
+            updatePlaceholders(taskType);
+        });
+        
+        function updatePlaceholders(taskType) {
+            const instructionPlaceholder = document.getElementById('instruction');
+            const codePlaceholder = document.getElementById('codeSnippet');
+            
+            switch(taskType) {
+                case 'write':
+                    instructionPlaceholder.placeholder = 'Describe the code you want to write...';
+                    break;
+                case 'debug':
+                    instructionPlaceholder.placeholder = 'Describe the issue with your code...';
+                    codePlaceholder.placeholder = 'Paste your code with the bug here...';
+                    break;
+                case 'explain':
+                    instructionPlaceholder.placeholder = 'What would you like explained about this code?';
+                    codePlaceholder.placeholder = 'Paste the code you want explained...';
+                    break;
+                case 'refactor':
+                    instructionPlaceholder.placeholder = 'How would you like the code improved?';
+                    codePlaceholder.placeholder = 'Paste the code you want refactored...';
+                    break;
+                case 'test':
+                    instructionPlaceholder.placeholder = 'What kind of tests do you need?';
+                    codePlaceholder.placeholder = 'Paste the code you want to write tests for...';
+                    break;
+                case 'convert':
+                    instructionPlaceholder.placeholder = 'Specify the target language (e.g., "Convert to Python")';
+                    codePlaceholder.placeholder = 'Paste the code you want to convert...';
+                    break;
+                default:
+                    instructionPlaceholder.placeholder = 'Enter your instruction here...';
+                    codePlaceholder.placeholder = 'Enter your code here (if needed)...';
+            }
+        }
+        
+        // Form submission
+        document.getElementById('promptForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const taskType = document.getElementById('taskType').value;
+            const codeSnippet = document.getElementById('codeSnippet').value;
+            const instruction = document.getElementById('instruction').value;
+            
+            // Show loading indicator
+            document.getElementById('loadingIndicator').style.display = 'block';
+            document.getElementById('errorMessage').innerHTML = '';
+            document.getElementById('errorMessage').style.display = 'none';
+            
+            // First check if the server is running
+            try {
+                const serverCheck = await fetch('/health', { timeout: 2000 })
+                    .catch(() => ({ ok: false }));
+                
+                if (!serverCheck.ok) {
+                    throw new Error('Server is not responding');
+                }
+                
+                // If server is running, proceed with the main request
+                const response = await fetch('/ask', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        taskType,
+                        codeSnippet,
+                        instruction
+                    })
+                });
+                
+                let data;
+                try {
+                    data = await response.json();
+                } catch (jsonError) {
+                    throw new Error('Invalid response from server. The server might be misconfigured.');
+                }
+                
+                if (response.ok) {
+                    // Display the response
+                    document.getElementById('response').textContent = data.response;
+                    
+                    // Add to history
+                    addToHistory(taskType, codeSnippet, instruction, data.response);
+                } else {
+                    // Show error message with details if available
+                    displayError(data.error, data.details);
+                    
+                    // Add action buttons based on error type
+                    if (data.error && data.error.includes('Ollama')) {
+                        addErrorAction('Setup Ollama', function() {
+                            document.getElementById('setupLLMModal').classList.remove('hidden');
+                        });
+                    }
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                
+                if (error.message === 'Server is not responding') {
+                    displayError(
+                        'Server is not responding', 
+                        'Make sure the MCP server is running. Start it by running "node server.js" in your terminal.'
+                    );
+                } else {
+                    displayError(
+                        'Failed to communicate with the server', 
+                        error.message || 'An unknown error occurred'
+                    );
+                }
+            } finally {
+                // Hide loading indicator
+                document.getElementById('loadingIndicator').style.display = 'none';
+            }
+        });
+        
+        // Helper function to display errors
+        function displayError(title, details) {
+            const errorElement = document.getElementById('errorMessage');
+            errorElement.innerHTML = ''; // Clear previous content
+            
+            // Add error title
+            const titleElement = document.createElement('div');
+            titleElement.className = 'error-title';
+            titleElement.textContent = title || 'An error occurred';
+            errorElement.appendChild(titleElement);
+            
+            // Add details if available
+            if (details) {
+                const detailsElement = document.createElement('div');
+                detailsElement.className = 'error-details';
+                detailsElement.textContent = details;
+                errorElement.appendChild(detailsElement);
+            }
+            
+            // Create container for action buttons
+            const actionsContainer = document.createElement('div');
+            actionsContainer.className = 'error-actions';
+            errorElement.appendChild(actionsContainer);
+            
+            // Make sure error is visible
+            errorElement.style.display = 'block';
+        }
+        
+        // Add action button to error message
+        function addErrorAction(label, callback) {
+            const actionsContainer = document.querySelector('.error-actions');
+            if (!actionsContainer) return;
+            
+            const button = document.createElement('button');
+            button.className = 'error-action-btn';
+            button.textContent = label;
+            button.addEventListener('click', callback);
+            
+            actionsContainer.appendChild(button);
+        }
+        
+        // Store prompt history
+        let promptHistory = [];
+        
+        // Add to history
+        function addToHistory(taskType, codeSnippet, instruction, response) {
+            // Add to the history array
+            const historyItem = {
+                taskType,
+                codeSnippet,
+                instruction,
+                response,
+                timestamp: new Date().toLocaleTimeString()
+            };
+            
+            promptHistory.unshift(historyItem);
+            
+            // Keep only the last 10 items
+            if (promptHistory.length > 10) {
+                promptHistory.pop();
+            }
+            
+            // Save to localStorage
+            saveHistory();
+            
+            // Update the UI
+            updateHistoryUI();
+        }
+        
+        // Update history UI
+        function updateHistoryUI() {
+            const historyContainer = document.getElementById('promptHistory');
+            historyContainer.innerHTML = '';
+            
+            if (promptHistory.length === 0) {
+                const emptyMessage = document.createElement('div');
+                emptyMessage.className = 'history-item';
+                emptyMessage.textContent = 'No history yet';
+                emptyMessage.style.fontStyle = 'italic';
+                emptyMessage.style.color = 'var(--neutral-500)';
+                historyContainer.appendChild(emptyMessage);
+                return;
+            }
+            
+            promptHistory.forEach((item, index) => {
+                const historyElement = document.createElement('div');
+                historyElement.className = 'history-item';
+                
+                const taskTypeBadge = document.createElement('span');
+                taskTypeBadge.className = 'task-type-badge';
+                taskTypeBadge.textContent = getTaskTypeName(item.taskType);
+                
+                const instructionText = document.createElement('span');
+                instructionText.textContent = item.instruction.substring(0, 40) + (item.instruction.length > 40 ? '...' : '');
+                
+                const timestamp = document.createElement('span');
+                timestamp.className = 'timestamp';
+                timestamp.textContent = item.timestamp;
+                
+                historyElement.appendChild(taskTypeBadge);
+                historyElement.appendChild(instructionText);
+                historyElement.appendChild(timestamp);
+                
+                // Add click event to restore this prompt
+                historyElement.addEventListener('click', () => {
+                    restorePrompt(index);
+                });
+                
+                historyContainer.appendChild(historyElement);
+            });
+        }
+        
+        // Get task type name
+        function getTaskTypeName(taskTypeId) {
+            const taskTypeSelect = document.getElementById('taskType');
+            for (const option of taskTypeSelect.options) {
+                if (option.value === taskTypeId) {
+                    return option.textContent;
+                }
+            }
+            return taskTypeId;
+        }
+        
+        // Restore prompt
+        function restorePrompt(index) {
+            const item = promptHistory[index];
+            
+            document.getElementById('taskType').value = item.taskType;
+            document.getElementById('codeSnippet').value = item.codeSnippet;
+            document.getElementById('instruction').value = item.instruction;
+            
+            // Update UI based on task type
+            document.getElementById('taskType').dispatchEvent(new Event('change'));
+        }
+        
+        // Save history to localStorage
+        function saveHistory() {
+            localStorage.setItem('mcp_history', JSON.stringify(promptHistory));
+        }
+        
+        // Load history from localStorage
+        function loadHistory() {
+            const savedHistory = localStorage.getItem('mcp_history');
+            if (savedHistory) {
+                promptHistory = JSON.parse(savedHistory);
+                updateHistoryUI();
+            }
+        }
+        
+        // Clear history
+        function clearHistory() {
+            promptHistory = [];
+            localStorage.removeItem('mcp_history');
+            updateHistoryUI();
+        }
+        
+        // Dark mode toggle
+        const themeToggleBtn = document.getElementById('theme-toggle-btn');
+        const lightIcon = document.getElementById('light-icon');
+        const darkIcon = document.getElementById('dark-icon');
+        
+        // Check for saved theme preference or use preferred color scheme
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.setAttribute('data-theme', 'dark');
+            lightIcon.style.display = 'none';
+            darkIcon.style.display = 'block';
+        }
+        
+        themeToggleBtn.addEventListener('click', () => {
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            if (currentTheme === 'dark') {
+                document.documentElement.setAttribute('data-theme', 'light');
+                localStorage.setItem('theme', 'light');
+                lightIcon.style.display = 'block';
+                darkIcon.style.display = 'none';
+            } else {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                localStorage.setItem('theme', 'dark');
+                lightIcon.style.display = 'none';
+                darkIcon.style.display = 'block';
+            }
+        });
+        
+        // Copy response to clipboard
+        const copyResponseBtn = document.getElementById('copy-response');
+        copyResponseBtn.addEventListener('click', () => {
+            const responseText = document.getElementById('response').innerText;
+            navigator.clipboard.writeText(responseText)
+                .then(() => {
+                    const originalText = copyResponseBtn.innerHTML;
+                    copyResponseBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg><span>Copied!</span>';
+                    setTimeout(() => {
+                        copyResponseBtn.innerHTML = originalText;
+                    }, 2000);
+                })
+                .catch(err => {
+                    console.error('Failed to copy: ', err);
+                });
+        });
+        
+        // Setup LLM Modal
+        const setupLLMBtn = document.getElementById('setupLLMBtn');
+        const setupLLMModal = document.getElementById('setupLLMModal');
+        const closeModal = document.querySelector('.close-modal');
+        
+        setupLLMBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            setupLLMModal.classList.remove('hidden');
+        });
+        
+        closeModal.addEventListener('click', function() {
+            setupLLMModal.classList.add('hidden');
+        });
+        
+        // Close modal when clicking outside of it
+        window.addEventListener('click', function(e) {
+            if (e.target === setupLLMModal) {
+                setupLLMModal.classList.add('hidden');
+            }
+        });
+        
+        loadHistory();
+    </script>
+</body>
+</html>
